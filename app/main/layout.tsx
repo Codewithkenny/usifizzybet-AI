@@ -1,6 +1,6 @@
 import * as React from "react";
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+// import SiteHeader from "@/components/SiteHeader";
+// import SiteFooter from "@/components/SiteFooter";
 
 interface MainLayoutProps {
   children: React.ReactNode;
