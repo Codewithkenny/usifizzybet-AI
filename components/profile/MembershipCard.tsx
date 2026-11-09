@@ -68,7 +68,7 @@ export default function MembershipCard({
           </dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">Renews</dt>
+          <dt className="text-muted-foreground">Access ends</dt>
           <dd className="font-mono text-foreground">
             {active ? fmtDate(subscription?.current_period_end) : "—"}
           </dd>

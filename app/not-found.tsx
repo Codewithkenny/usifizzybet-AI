@@ -16,10 +16,9 @@ export default function NotFound() {
     queryKey: ["user"],
     queryFn: async () => {
       try {
-        // FIXED: Swapped out the old base44 call for your native custom client
         const user = await usifizzyClient.auth.me();
         return { user, isAuthenticated: true };
-      } catch (error) {
+      } catch {
         return { user: null, isAuthenticated: false };
       }
     },
@@ -42,7 +41,9 @@ export default function NotFound() {
             </h2>
             <p className="text-slate-600 leading-relaxed">
               The page{" "}
-              <span className="font-medium text-slate-700">"{pageName}"</span>{" "}
+              <span className="font-medium text-slate-700">
+                &quot;{pageName}&quot;
+              </span>{" "}
               could not be found in this application.
             </p>
           </div>
@@ -61,7 +62,7 @@ export default function NotFound() {
                       Admin Note
                     </p>
                     <p className="text-sm text-slate-600 leading-relaxed">
-                      This could mean that the AI hasn't implemented this page
+                      This could mean that the AI hasn&apos;t implemented this page
                       yet. Ask it to implement it in the chat.
                     </p>
                   </div>

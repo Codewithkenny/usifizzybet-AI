@@ -1,22 +1,15 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { usifizzyClient } from "@/api/usifizzyClient";
-import { continueMfa, loginWithGoogle } from "@/lib/authMfa";
+import { loginWithGoogle, registerWithEmail } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
-import { toast } from "@/components/ui/use-toast";
 import { safeReturnTo } from "@/lib/authReturnTo";
 
 function RegisterForm() {
@@ -26,249 +19,185 @@ function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showOtp, setShowOtp] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
+  const [confirmationSent, setConfirmationSent] = useState(false);
+  const returnTo = safeReturnTo();
 
-  const returnToDestination = safeReturnTo();
-  const loginPath =
-    "/login" +
-    (returnToDestination !== "/"
-      ? "?returnTo=" + encodeURIComponent(returnToDestination)
-      : "");
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError("");
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
+
     setLoading(true);
     try {
-      // FIXED: Invoking your custom application engine client directly
-      await usifizzyClient.auth.updateMe({ email, password });
-      setShowOtp(true);
-    } catch (err: any) {
-      setError(err.message || "Registration failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerify = async () => {
-    setError("");
-    setLoading(true);
-    try {
-      // FIXED: Verification sequence processed cleanly via usifizzyClient endpoints
-      const result = await usifizzyClient.auth.me();
-
-      if (result?.mfa_required) {
-        await continueMfa(result, returnToDestination).catch(() =>
-          router.push(loginPath),
-        );
-        return;
+      const { session } = await registerWithEmail(email, password);
+      if (session) {
+        router.push(returnTo);
+      } else {
+        setConfirmationSent(true);
       }
-      router.push(returnToDestination);
-    } catch (err: any) {
-      setError(err.message || "Invalid verification code");
+    } catch (signupError) {
+      setError(
+        signupError instanceof Error
+          ? signupError.message
+          : "Registration failed",
+      );
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResend = async () => {
-    setError("");
-    try {
-      toast({
-        title: "Code sent",
-        description: "Check your email for the new code.",
-      });
-    } catch (err: any) {
-      setError(err.message || "Failed to resend code");
     }
   };
 
   const handleGoogle = async () => {
+    setError("");
     try {
-      await loginWithGoogle(returnToDestination);
-    } catch (err: any) {
-      setError(err.message || "Unable to sign in with Google");
+      await loginWithGoogle(returnTo);
+    } catch (oauthError) {
+      setError(
+        oauthError instanceof Error
+          ? oauthError.message
+          : "Unable to sign in with Google",
+      );
     }
   };
 
-  if (showOtp) {
-    return (
-      <AuthLayout
-        icon={Mail}
-        title="Verify your email"
-        subtitle={`We sent a code to ${email}`}
-      >
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-            {error}
-          </div>
-        )}
-        <div className="flex justify-center mb-6">
-          <InputOTP
-            maxLength={6}
-            value={otpCode}
-            onChange={setOtpCode}
-            autoFocus
-            autoComplete="one-time-code"
-          >
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
-        </div>
-        <Button
-          className="w-full h-12 font-medium"
-          onClick={handleVerify}
-          disabled={loading || otpCode.length < 6}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Verifying...
-            </>
-          ) : (
-            "Verify"
-          )}
-        </Button>
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          Didn't receive the code?{" "}
-          <button
-            onClick={handleResend}
-            className="text-primary font-medium hover:underline"
-          >
-            Resend
-          </button>
-        </p>
-      </AuthLayout>
-    );
-  }
+  const loginPath =
+    "/login" +
+    (returnTo !== "/" ? `?returnTo=${encodeURIComponent(returnTo)}` : "");
 
   return (
     <AuthLayout
-      icon={UserPlus}
-      title="Create your account"
-      subtitle="Sign up to get started"
+      icon={confirmationSent ? Mail : UserPlus}
+      title={confirmationSent ? "Check your email" : "Create your account"}
+      subtitle={
+        confirmationSent
+          ? `Use the confirmation link we sent to ${email}.`
+          : "Sign up to get started"
+      }
       footer={
         <>
           Already have an account?{" "}
           <Link
             href={loginPath}
-            className="text-primary font-medium hover:underline"
+            className="font-medium text-primary hover:underline"
           >
             Log in
           </Link>
         </>
       }
     >
-      <Button
-        variant="outline"
-        className="w-full h-12 text-sm font-medium mb-6"
-        onClick={handleGoogle}
-        type="button"
-      >
-        <GoogleIcon className="w-5 h-5 mr-2" />
-        Continue with Google
-      </Button>
+      {confirmationSent ? (
+        <p className="text-center text-sm text-muted-foreground">
+          Once your email is confirmed, you can log in and access your account.
+        </p>
+      ) : (
+        <>
+          <Button
+            variant="outline"
+            className="mb-6 h-12 w-full text-sm font-medium"
+            onClick={handleGoogle}
+            type="button"
+          >
+            <GoogleIcon className="mr-2 h-5 w-5" />
+            Continue with Google
+          </Button>
 
-      <div className="relative mb-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">or</span>
-        </div>
-      </div>
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-3 text-muted-foreground">or</span>
+            </div>
+          </div>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <div className="relative">
-            <Mail
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              autoFocus
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12"
-              required
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Lock
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
-              required
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm">Confirm Password</Label>
-          <div className="relative">
-            <Lock
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              id="confirm"
-              type="password"
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 h-12"
-              required
-            />
-          </div>
-        </div>
-        <Button
-          type="submit"
-          className="w-full h-12 font-medium"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating account...
-            </>
-          ) : (
-            "Create account"
+          {error && (
+            <div
+              role="alert"
+              className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              {error}
+            </div>
           )}
-        </Button>
-      </form>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail
+                  className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  autoFocus
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  className="h-12 pl-10"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock
+                  className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="h-12 pl-10"
+                  minLength={8}
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm">Confirm password</Label>
+              <div className="relative">
+                <Lock
+                  className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <Input
+                  id="confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  className="h-12 pl-10"
+                  minLength={8}
+                  required
+                />
+              </div>
+            </div>
+            <Button
+              type="submit"
+              className="h-12 w-full font-medium"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Create account"
+              )}
+            </Button>
+          </form>
+        </>
+      )}
     </AuthLayout>
   );
 }
@@ -277,8 +206,8 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-slate-50">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="flex min-h-screen items-center justify-center bg-slate-50">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       }
     >

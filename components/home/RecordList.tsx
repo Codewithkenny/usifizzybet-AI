@@ -1,24 +1,10 @@
 import * as React from "react";
 import { fmtDate, fmtOdds } from "@/lib/format";
 import StatusBadge from "@/components/StatusBadge";
-
-interface PickRecordItem {
-  id: string | number;
-  home_team: string;
-  away_team: string;
-  league?: string;
-  sport?: string;
-  kickoff: string | Date;
-  market: string;
-  selection: string;
-  odds: string | number;
-  home_score?: number | null;
-  away_score?: number | null;
-  status: string;
-}
+import type { PickRecord } from "@/lib/entityTypes";
 
 interface RecordListProps {
-  picks?: PickRecordItem[];
+  picks?: PickRecord[];
 }
 
 export default function RecordList({ picks = [] }: RecordListProps) {
@@ -32,9 +18,9 @@ export default function RecordList({ picks = [] }: RecordListProps) {
 
   return (
     <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border">
-      {picks.map((pick) => (
+      {picks.map((pick, index) => (
         <div
-          key={pick.id}
+          key={pick.id ?? index}
           className="grid grid-cols-[1fr_auto] items-center gap-4 bg-card px-5 py-4 md:grid-cols-[1.6fr_1fr_0.6fr_auto]"
         >
           <div className="min-w-0">
@@ -57,6 +43,7 @@ export default function RecordList({ picks = [] }: RecordListProps) {
             {pick.home_score != null && pick.away_score != null && (
               <span className="font-mono text-xs text-muted-foreground">
                 {pick.home_score}–{pick.away_score}
+                {pick.minute_label && ` · ${pick.minute_label}`}
               </span>
             )}
             <StatusBadge status={pick.status} />

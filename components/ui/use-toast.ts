@@ -6,7 +6,8 @@ import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 const TOAST_LIMIT = 20;
 const TOAST_REMOVE_DELAY = 1000000;
 
-export interface ToasterToast extends ToastProps {
+export interface ToasterToast
+  extends Omit<ToastProps, "title" | "description"> {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;

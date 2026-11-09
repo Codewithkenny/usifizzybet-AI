@@ -3,28 +3,10 @@ import { cn } from "@/lib/utils";
 import { fmtKickoff, fmtOdds } from "@/lib/format";
 import StatusBadge, { RiskBadge } from "@/components/StatusBadge";
 import PickLockPrompt from "@/components/PickLockPrompt";
-
-// Explicit data structure interface matching your data client collection fields
-interface PickData {
-  id?: string;
-  league?: string;
-  sport?: string;
-  status?: string;
-  home_team: string;
-  away_team: string;
-  kickoff: string | Date;
-  market?: string;
-  selection?: string;
-  odds?: string | number;
-  confidence?: number;
-  risk_level?: string;
-  reasoning?: string;
-  home_score?: number | null;
-  away_score?: number | null;
-}
+import type { PickRecord } from "@/lib/entityTypes";
 
 interface PickCardProps {
-  pick: PickData;
+  pick: PickRecord;
   locked?: boolean;
   className?: string;
 }
@@ -35,6 +17,7 @@ export default function PickCard({
   className = "",
 }: PickCardProps) {
   const hasScore = pick.home_score != null && pick.away_score != null;
+  const confidence = Number(pick.confidence) || 0;
 
   return (
     <article
@@ -57,6 +40,16 @@ export default function PickCard({
       <p className="mt-1 font-mono text-[11px] text-muted-foreground">
         {fmtKickoff(pick.kickoff)}
       </p>
+      {pick.home_score != null && pick.away_score != null && (
+        <p className="mt-2 inline-flex items-center gap-2 font-mono text-xs text-primary">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+          {pick.home_score} – {pick.away_score}
+          {pick.minute_label && <span>· {pick.minute_label}</span>}
+          {pick.live_updated_at && (
+            <span className="text-muted-foreground">live score</span>
+          )}
+        </p>
+      )}
 
       <div className="mt-4 flex items-end justify-between gap-4 rounded-xl border border-border/70 bg-background/50 px-3.5 py-3">
         <div className="min-w-0">
@@ -87,12 +80,12 @@ export default function PickCard({
               <div
                 className="h-full rounded-full bg-primary"
                 style={{
-                  width: `${Math.min(100, Math.max(4, pick.confidence || 0))}%`,
+                  width: `${Math.min(100, Math.max(4, confidence))}%`,
                 }}
               />
             </div>
             <span className="font-mono text-[11px] text-primary">
-              {pick.confidence ? `${pick.confidence}%` : "—"}
+              {confidence ? `${confidence}%` : "—"}
             </span>
             <RiskBadge level={pick.risk_level} />
           </div>
@@ -106,7 +99,13 @@ export default function PickCard({
           <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/70 pt-3.5">
             <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
               {hasScore
-                ? `Final ${pick.home_score} – ${pick.away_score}`
+                ? `${
+                    pick.live_status === "finished" ||
+                    pick.status === "Won" ||
+                    pick.status === "Lost"
+                      ? "Final"
+                      : "Score"
+                  } ${pick.home_score} – ${pick.away_score}`
                 : "Matchline analysis"}
             </span>
             <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">

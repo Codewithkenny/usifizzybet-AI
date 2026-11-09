@@ -115,7 +115,7 @@ export default function VideoAd() {
                   href="/picks"
                   className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-4 py-2 font-display text-xs font-semibold text-foreground backdrop-blur transition-colors hover:border-primary/50"
                 >
-                  See today's tips <ArrowRight className="h-3.5 w-3.5" />
+                  See today&apos;s tips <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
             </div>

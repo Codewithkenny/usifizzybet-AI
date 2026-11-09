@@ -1,16 +1,27 @@
 "use client";
 
-import React, { createContext, useState, useContext, useEffect } from "react";
-import { usifizzyClient } from "@/api/usifizzyClient"; // Clean native import
-import { appParams } from "@/lib/app-params";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { usifizzyClient } from "@/api/usifizzyClient";
+import { createClient } from "@/lib/supabase/client";
+import { safeReturnToPath } from "@/lib/authReturnTo";
 
 interface UserProfile {
-  id: string | number;
+  id: string;
   email: string;
   display_name?: string | null;
   full_name?: string | null;
+  username?: string;
+  avatar_url?: string;
+  notify_daily_picks?: boolean;
+  notify_result_alerts?: boolean;
+  notify_weekly_digest?: boolean;
   role?: string;
-  [key: string]: any;
 }
 
 interface AuthErrorType {
@@ -20,8 +31,7 @@ interface AuthErrorType {
 
 interface AppPublicSettings {
   id: string | number;
-  public_settings?: any;
-  [key: string]: any;
+  public_settings?: Record<string, unknown>;
 }
 
 interface AuthContextInterface {
@@ -32,7 +42,7 @@ interface AuthContextInterface {
   authError: AuthErrorType | null;
   appPublicSettings: AppPublicSettings | null;
   authChecked: boolean;
-  logout: (shouldRedirect?: boolean) => void;
+  logout: (shouldRedirect?: boolean) => Promise<void>;
   navigateToLogin: (returnTo?: string) => void;
   checkUserAuth: () => Promise<void>;
   checkAppState: () => Promise<void>;
@@ -40,125 +50,135 @@ interface AuthContextInterface {
 
 const AuthContext = createContext<AuthContextInterface | undefined>(undefined);
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof error.status === "number"
+  ) {
+    return error.status;
+  }
+  return undefined;
+}
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] =
-    useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
   const [authError, setAuthError] = useState<AuthErrorType | null>(null);
-  const [authChecked, setAuthChecked] = useState<boolean>(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [appPublicSettings, setAppPublicSettings] =
     useState<AppPublicSettings | null>(null);
 
-  useEffect(() => {
-    checkAppState();
-  }, []);
-
-  const checkAppState = async () => {
+  const checkUserAuth = useCallback(async () => {
+    setIsLoadingAuth(true);
     try {
-      setIsLoadingPublicSettings(true);
-      setAuthError(null);
-
-      try {
-        const publicSettings = await usifizzyClient.app.getPublicSettings();
-        setAppPublicSettings(publicSettings);
-
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-          setAuthChecked(true);
-        }
-        setIsLoadingPublicSettings(false);
-      } catch (appError: any) {
-        console.error("App state check failed:", appError);
-
-        if (appError.status === 403 && appError.data?.extra_data?.reason) {
-          const reason = appError.data.extra_data.reason;
-          if (reason === "auth_required") {
-            setAuthError({
-              type: "auth_required",
-              message: "Authentication required",
-            });
-          } else if (reason === "user_not_registered") {
-            setAuthError({
-              type: "user_not_registered",
-              message: "User not registered for this app",
-            });
-          } else {
-            setAuthError({
-              type: reason,
-              message: appError.message || "Access Forbidden",
-            });
-          }
-        } else {
-          setAuthError({
-            type: "unknown",
-            message: appError.message || "Failed to load app",
-          });
-        }
-        setIsLoadingPublicSettings(false);
-        setIsLoadingAuth(false);
-      }
-    } catch (error: any) {
-      console.error("Unexpected error during initialization:", error);
-      setAuthError({
-        type: "unknown",
-        message: error.message || "An unexpected error occurred",
-      });
-      setIsLoadingPublicSettings(false);
-      setIsLoadingAuth(false);
-    }
-  };
-
-  const checkUserAuth = async () => {
-    try {
-      setIsLoadingAuth(true);
       const currentUser = await usifizzyClient.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
-    } catch (error: any) {
+      setAuthError(null);
+    } catch (error) {
       console.error("User auth check failed:", error);
-      setIsLoadingAuth(false);
+      setUser(null);
       setIsAuthenticated(false);
+      setAuthError(
+        getErrorStatus(error) === 401 || getErrorStatus(error) === 403
+          ? {
+              type: "auth_required",
+              message: "Authentication required",
+            }
+          : {
+              type: "unknown",
+              message: getErrorMessage(error, "Unable to verify your account"),
+            },
+      );
+    } finally {
+      setIsLoadingAuth(false);
       setAuthChecked(true);
+    }
+  }, []);
 
-      if (error.status === 401 || error.status === 403) {
+  const checkAppState = useCallback(async () => {
+    setIsLoadingPublicSettings(true);
+    try {
+      const publicSettings = await usifizzyClient.app.getPublicSettings();
+      setAppPublicSettings(publicSettings);
+      await checkUserAuth();
+    } catch (error) {
+      console.error("App state check failed:", error);
+      setAuthError({
+        type: "unknown",
+        message: getErrorMessage(error, "Failed to load app settings"),
+      });
+      setIsLoadingAuth(false);
+      setAuthChecked(true);
+    } finally {
+      setIsLoadingPublicSettings(false);
+    }
+  }, [checkUserAuth]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser((currentUser) => ({
+          ...currentUser,
+          id: session.user.id,
+          email: session.user.email ?? "",
+        }));
+        setIsAuthenticated(true);
+        setAuthError(null);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
         setAuthError({
           type: "auth_required",
           message: "Authentication required",
         });
       }
-    }
-  };
+      setIsLoadingAuth(false);
+      setAuthChecked(true);
+    });
 
-  const logout = (shouldRedirect = true) => {
+    void checkAppState();
+    return () => subscription.unsubscribe();
+  }, [checkAppState]);
+
+  const logout = useCallback(async (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
 
-    if (typeof window !== "undefined") {
-      if (shouldRedirect) {
-        usifizzyClient.auth.logout(window.location.href);
-      } else {
-        usifizzyClient.auth.logout();
+    try {
+      if (typeof window !== "undefined") {
+        await usifizzyClient.auth.logout(
+          shouldRedirect ? window.location.href : undefined,
+        );
       }
+    } catch (error) {
+      console.error("Logout failed:", error);
+      setAuthError({
+        type: "logout_failed",
+        message: getErrorMessage(error, "Unable to log out"),
+      });
     }
-  };
+  }, []);
 
-  const navigateToLogin = (returnTo?: string) => {
+  const navigateToLogin = useCallback((returnTo?: string) => {
     if (typeof window === "undefined") return;
-
-    const safeReturnTo = returnTo && returnTo.startsWith("/") ? returnTo : "/";
-
+    const safeReturnTo = safeReturnToPath(returnTo ?? "/");
     const loginUrl = new URL("/auth/login", window.location.origin);
     loginUrl.searchParams.set("returnTo", safeReturnTo);
-
     window.location.href = loginUrl.toString();
-  };
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{

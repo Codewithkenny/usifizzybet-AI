@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usifizzyClient } from "@/api/usifizzyClient";
+import { requestPasswordReset } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,18 +13,23 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
     try {
-      // Clean custom client implementation trigger
-      await usifizzyClient.auth.updateMe({ email, requestReset: true });
-    } catch {
-      // Secure fallback: Always show success to prevent email enumeration attacks
+      await requestPasswordReset(email);
+      setSent(true);
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to request a password reset",
+      );
     } finally {
       setLoading(false);
-      setSent(true);
     }
   };
 
@@ -45,10 +50,16 @@ export default function ForgotPassword() {
     >
       {sent ? (
         <p className="text-sm text-foreground text-center">
-          If an account exists with that email, you'll receive a password reset
+          If an account exists with that email, you&apos;ll receive a password reset
           link shortly.
         </p>
       ) : (
+        <>
+        {error && (
+          <p role="alert" className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email address</Label>
@@ -85,6 +96,7 @@ export default function ForgotPassword() {
             )}
           </Button>
         </form>
+        </>
       )}
     </AuthLayout>
   );

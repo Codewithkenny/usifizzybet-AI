@@ -18,7 +18,7 @@ export default function SegmentedFilter({
   options,
   value,
   onChange,
-}: SegmentedFilterProps<any>) {
+}: SegmentedFilterProps<string | number>) {
   return (
     <div className="inline-flex flex-wrap items-center gap-1 rounded-full border border-border bg-card/60 p-1">
       {options.map((option) => {

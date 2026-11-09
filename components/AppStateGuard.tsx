@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import UserNotRegisteredError from "@/components/UserNotRegisteredError";
+import BrandLoader from "@/components/BrandLoader";
 
 function buildReturnTo(pathname: string, search: string) {
   const params = new URLSearchParams(search);
@@ -22,6 +23,7 @@ export default function AppStateGuard({
     useAuth();
 
   const pathname = usePathname();
+  const [publicStartupElapsed, setPublicStartupElapsed] = React.useState(false);
 
   // FIXED: Expanded the whitelist check so guests can freely browse your main product slates
   const isPublicPage =
@@ -31,8 +33,17 @@ export default function AppStateGuard({
     pathname === "/results" ||
     pathname === "/membership" ||
     pathname === "/faq" ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password" ||
     pathname === "/auth/login" ||
     pathname.startsWith("/auth/");
+
+  React.useEffect(() => {
+    const timer = window.setTimeout(() => setPublicStartupElapsed(true), 900);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   React.useEffect(() => {
     if (isPublicPage) return;
@@ -58,12 +69,11 @@ export default function AppStateGuard({
     navigateToLogin,
   ]);
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-800"></div>
-      </div>
-    );
+  if (
+    (!isPublicPage && (isLoadingPublicSettings || isLoadingAuth)) ||
+    (isPublicPage && !publicStartupElapsed)
+  ) {
+    return <BrandLoader />;
   }
 
   if (authError?.type === "user_not_registered") {
@@ -72,6 +82,17 @@ export default function AppStateGuard({
 
   if (!isPublicPage && authError?.type === "auth_required") {
     return null;
+  }
+
+  if (!isPublicPage && authError) {
+    return (
+      <div
+        role="alert"
+        className="mx-auto max-w-xl px-5 py-20 text-center text-sm text-destructive"
+      >
+        {authError.message}
+      </div>
+    );
   }
 
   return <>{children}</>;

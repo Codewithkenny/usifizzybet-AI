@@ -2,8 +2,8 @@
 
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { loginWithMfa, continueMfa, loginWithGoogle } from "@/lib/authMfa";
+import { useRouter } from "next/navigation";
+import { loginWithPassword, loginWithGoogle } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,14 +14,11 @@ import { safeReturnTo } from "@/lib/authReturnTo";
 
 function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // FIXED: Removed the argument invocation so it correctly matches the 0-argument function type signature
   const returnTo = safeReturnTo();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -29,15 +26,12 @@ function LoginForm() {
     setError("");
     setLoading(true);
     try {
-      const result = await loginWithMfa(email, password);
-      if (result.mfa_required) {
-        await continueMfa(result, returnTo);
-        return;
-      }
-      // Native navigation redirect transfer points
+      await loginWithPassword(email, password);
       router.push(returnTo);
-    } catch (err: any) {
-      setError(err.message || "Invalid email or password");
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Invalid email or password",
+      );
     } finally {
       setLoading(false);
     }
@@ -46,8 +40,10 @@ function LoginForm() {
   const handleGoogle = async () => {
     try {
       await loginWithGoogle(returnTo);
-    } catch (err: any) {
-      setError(err.message || "Unable to sign in with Google");
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Unable to sign in with Google",
+      );
     }
   };
 
@@ -58,7 +54,7 @@ function LoginForm() {
       subtitle="Log in to your account"
       footer={
         <>
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href={`/register${returnTo !== "/" ? "?returnTo=" + encodeURIComponent(returnTo) : ""}`}
             className="text-primary font-medium hover:underline"

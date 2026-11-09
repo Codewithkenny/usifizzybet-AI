@@ -27,7 +27,7 @@ export default function StatsRow({
           label="Picks settled"
           hint="wins and losses shown"
         />
-        <StatTile value={pending} label="Picks live" hint="awaiting kick-off" />
+        <StatTile value={pending} label="Picks today" hint="on the live feed" />
         <StatTile
           value={won}
           label="Winning picks"

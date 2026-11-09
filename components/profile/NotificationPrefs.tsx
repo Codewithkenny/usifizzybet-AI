@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { usifizzyClient } from "@/api/usifizzyClient";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 
@@ -50,6 +50,7 @@ export default function NotificationPrefs({ user }: NotificationPrefsProps) {
   });
   const [saving, setSaving] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     setPrefs({
@@ -66,11 +67,15 @@ export default function NotificationPrefs({ user }: NotificationPrefsProps) {
   const save = async () => {
     setSaving(true);
     setSaved(false);
+    setErrorMessage("");
     try {
-      await base44.auth.updateMe(prefs);
+      await usifizzyClient.auth.updateMe(prefs);
       setSaved(true);
     } catch (error) {
       console.error("Failed to update notification parameters:", error);
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unable to save preferences",
+      );
     } finally {
       setSaving(false);
     }
@@ -113,6 +118,11 @@ export default function NotificationPrefs({ user }: NotificationPrefsProps) {
         </Button>
         {saved && <span className="text-xs text-primary">Saved</span>}
       </div>
+      {errorMessage && (
+        <p role="alert" className="mt-3 text-sm text-destructive">
+          {errorMessage}
+        </p>
+      )}
     </section>
   );
 }

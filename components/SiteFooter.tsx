@@ -12,8 +12,9 @@ export default function SiteFooter() {
           <div className="max-w-sm">
             <Brand />
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              AI-assisted sports analysis for football and basketball. Every
-              pick is scored, published and graded in public.
+              AI-assisted sports analysis for football and basketball. We aim
+              to publish a transparent record; coverage depends on available
+              match data.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3">
@@ -23,7 +24,7 @@ export default function SiteFooter() {
                 href="/picks"
                 className="block text-muted-foreground hover:text-foreground"
               >
-                Today's picks
+                Today&apos;s picks
               </Link>
               <Link
                 href="/safe-bets"
@@ -75,15 +76,6 @@ export default function SiteFooter() {
                 className="block text-muted-foreground hover:text-foreground"
               >
                 Profile
-              </Link>
-            </div>
-            <div className="space-y-3">
-              <p className="eyebrow">Desk</p>
-              <Link
-                href="/admin"
-                className="block text-muted-foreground hover:text-foreground"
-              >
-                Admin
               </Link>
             </div>
           </div>

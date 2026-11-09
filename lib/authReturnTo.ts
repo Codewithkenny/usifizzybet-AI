@@ -10,14 +10,11 @@
  * //evil.com when assigned to location.href — an open redirect. So require the
  * resolved path to be exactly one leading slash (no "//" prefix, no backslash).
  */
-export function safeReturnTo(): string {
-  // SSR Safety check: Next.js builds pages on the server first where window is missing.
-  if (typeof window === "undefined") {
+export function safeReturnToPath(raw: string | null): string {
+  if (!raw) return "/";
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) {
     return "/";
   }
-
-  const raw = new URLSearchParams(window.location.search).get("returnTo");
-  if (!raw) return "/";
 
   try {
     const url = new URL(raw, window.location.origin);
@@ -46,4 +43,10 @@ export function safeReturnTo(): string {
   } catch {
     return "/";
   }
+}
+
+export function safeReturnTo(): string {
+  if (typeof window === "undefined") return "/";
+  const raw = new URLSearchParams(window.location.search).get("returnTo");
+  return safeReturnToPath(raw);
 }

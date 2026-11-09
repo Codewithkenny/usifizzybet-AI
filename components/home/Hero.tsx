@@ -3,32 +3,23 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import PickCard from "@/components/PickCard";
 import { ArrowRight } from "lucide-react";
-
-interface FeaturedPick {
-  id?: string;
-  league?: string;
-  sport?: string;
-  status?: string;
-  home_team: string;
-  away_team: string;
-  kickoff: string | Date;
-  market?: string;
-  selection?: string;
-  odds?: string | number;
-  confidence?: number;
-  risk_level?: string;
-  reasoning?: string;
-  home_score?: number | null;
-  away_score?: number | null;
-}
+import type { PickRecord } from "@/lib/entityTypes";
 
 interface HeroProps {
-  featured: FeaturedPick | null | undefined;
+  featured: PickRecord | null | undefined;
   locked: boolean;
   pendingCount: number;
+  feedLoading?: boolean;
+  feedError?: string;
 }
 
-export default function Hero({ featured, locked, pendingCount }: HeroProps) {
+export default function Hero({
+  featured,
+  locked,
+  pendingCount,
+  feedLoading = false,
+  feedError,
+}: HeroProps) {
   return (
     <section className="relative overflow-hidden border-b border-border">
       <div className="pointer-events-none absolute -top-48 left-1/2 h-[460px] w-[760px] -translate-x-1/2 rounded-full bg-primary/[0.08] blur-3xl" />
@@ -47,13 +38,13 @@ export default function Hero({ featured, locked, pendingCount }: HeroProps) {
           </h1>
           <p className="mt-6 max-w-md text-base leading-relaxed text-muted-foreground">
             Football and basketball predictions with clear reasoning, confidence
-            scores and risk grades. Follow the analysis and judge every result —
-            wins and losses — in public.
+            scores and model-generated risk labels. Follow available analysis
+            and results; predictions are uncertain and may be incomplete.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button size="lg" className="font-display font-semibold">
               <Link href="/picks" className="flex items-center">
-                See today's picks <ArrowRight className="ml-1.5 h-4 w-4" />
+                See today&apos;s picks <ArrowRight className="ml-1.5 h-4 w-4" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="font-display">
@@ -87,11 +78,15 @@ export default function Hero({ featured, locked, pendingCount }: HeroProps) {
           ) : (
             <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
               <p className="font-display text-base text-foreground">
-                The next slate is being built
+                {feedLoading
+                  ? "Loading the live board"
+                  : feedError
+                    ? "The live feed is unavailable"
+                    : "Waiting for today's picks"}
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Check back shortly — picks appear as soon as the AI finishes
-                scanning fixtures.
+                {feedError ||
+                  "Picks appear here when a sports-data source is available."}
               </p>
             </div>
           )}

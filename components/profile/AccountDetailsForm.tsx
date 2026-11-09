@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { usifizzyClient } from "@/api/usifizzyClient";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ export default function AccountDetailsForm({ user }: AccountDetailsFormProps) {
   const [displayName, setDisplayName] = useState<string>("");
   const [saving, setSaving] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     setDisplayName(user?.display_name || user?.full_name || "");
@@ -29,11 +30,15 @@ export default function AccountDetailsForm({ user }: AccountDetailsFormProps) {
   const save = async () => {
     setSaving(true);
     setSaved(false);
+    setErrorMessage("");
     try {
-      await base44.auth.updateMe({ display_name: displayName.trim() });
+      await usifizzyClient.auth.updateMe({ display_name: displayName.trim() });
       setSaved(true);
     } catch (error) {
       console.error("Failed to update profile metrics:", error);
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unable to save account details",
+      );
     } finally {
       setSaving(false);
     }
@@ -79,6 +84,11 @@ export default function AccountDetailsForm({ user }: AccountDetailsFormProps) {
         </Button>
         {saved && <span className="text-xs text-primary">Saved</span>}
       </div>
+      {errorMessage && (
+        <p role="alert" className="mt-3 text-sm text-destructive">
+          {errorMessage}
+        </p>
+      )}
     </section>
   );
 }

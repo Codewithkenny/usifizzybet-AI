@@ -1,5 +1,6 @@
 import { usifizzyClient } from "@/api/usifizzyClient";
 import { todayISO } from "@/lib/format";
+import { z } from "zod";
 
 export interface AIPickItem {
   sport?: string;
@@ -110,11 +111,52 @@ const slipsSchema = {
   required: ["slips"],
 };
 
+const generatedPicksSchema = z.object({
+  picks: z.array(
+    z.object({
+      sport: z.string().optional(),
+      league: z.string().min(1),
+      home_team: z.string().min(1),
+      away_team: z.string().min(1),
+      kickoff: z.string().min(1),
+      market: z.string().min(1),
+      selection: z.string().min(1),
+      odds: z.number().positive(),
+      confidence: z.number().int().min(0).max(100),
+      risk_level: z.enum(["Low", "Medium", "High"]),
+      reasoning: z.string().max(1000),
+    }),
+  ),
+});
+
+const generatedSlipsSchema = z.object({
+  slips: z.array(
+    z.object({
+      title: z.string().min(1),
+      target_odds: z.number().positive(),
+      total_odds: z.number().positive(),
+      sport: z.string().optional(),
+      legs: z.array(
+        z.object({
+          match: z.string().min(1),
+          league: z.string().optional(),
+          market: z.string().optional(),
+          selection: z.string().min(1),
+          odds: z.number().positive(),
+          kickoff: z.string().optional(),
+        }),
+      ),
+    }),
+  ),
+});
+
 export async function generatePicks(count: number = 6): Promise<AIPickItem[]> {
+  if (!Number.isInteger(count) || count < 1 || count > 20) {
+    throw new Error("Pick count must be between 1 and 20.");
+  }
   const date = todayISO();
   const result = await usifizzyClient.integrations.Core.InvokeLLM({
     add_context_from_internet: true,
-    model: "gemini_3_flash",
     response_json_schema: picksSchema,
     prompt: `You are the analyst engine behind a sports prediction desk. Today is ${date}.
 
@@ -139,14 +181,17 @@ Return for every pick:
 Never invent fixtures — include only games you actually found. Do not output bet codes or bookmaker names.`,
   });
 
-  const rows: AIPickItem[] = ((result?.picks || []) as AIPickItem[])
+  const parsed = generatedPicksSchema.safeParse(result);
+  if (!parsed.success) {
+    throw new Error("The AI returned picks in an invalid format.");
+  }
+
+  const rows: AIPickItem[] = parsed.data.picks
     .map((pick) => ({
       ...pick,
-      odds: Number(pick.odds) || null,
-      confidence: Math.round(Number(pick.confidence) || 0),
-      risk_level: ["Low", "Medium", "High"].includes(pick.risk_level)
-        ? pick.risk_level
-        : "Medium",
+      odds: pick.odds,
+      confidence: pick.confidence,
+      risk_level: pick.risk_level,
       status: "Pending",
       publish_date: date,
     }))
@@ -165,7 +210,6 @@ export async function generateSlips(): Promise<AISlipItem[]> {
   const date = todayISO();
   const result = await usifizzyClient.integrations.Core.InvokeLLM({
     add_context_from_internet: true,
-    model: "gemini_3_flash",
     response_json_schema: slipsSchema,
     prompt: `You are building SafeBets multi-leg tips for a sports prediction desk. Today is ${date}.
 
@@ -181,14 +225,17 @@ Rules:
 Return each slip with: title, target_odds, total_odds, sport, and legs (match, league, market, selection, odds, kickoff as ISO date-time). Do not output bet codes.`,
   });
 
-  const rows: AISlipItem[] = ((result?.slips || []) as AISlipItem[])
+  const parsed = generatedSlipsSchema.safeParse(result);
+  if (!parsed.success) {
+    throw new Error("The AI returned slips in an invalid format.");
+  }
+
+  const rows: AISlipItem[] = parsed.data.slips
     .map((slip) => ({
       ...slip,
-      target_odds: Number(slip.target_odds) || null,
-      total_odds: Number(slip.total_odds) || null,
       legs: (slip.legs || []).map((leg) => ({
         ...leg,
-        odds: Number(leg.odds) || null,
+        odds: leg.odds,
         status: "Pending",
       })),
       status: "Pending",

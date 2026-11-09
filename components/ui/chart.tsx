@@ -26,7 +26,7 @@ export type ChartConfig = {
 type ChartContainerProps = React.ComponentProps<"div"> & {
   id?: string;
   config: ChartConfig;
-  children: React.ReactNode;
+  children: React.ReactElement;
 };
 
 type ChartContextValue = {

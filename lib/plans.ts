@@ -1,10 +1,9 @@
 export const CURRENCY = "NGN";
 
-// Strict type literal for your application subscription tiers
 export type PlanId = "Free" | "Pro" | "Elite";
 
 export interface Plan {
-  id: PlanId | string;
+  id: PlanId;
   name: string;
   price: number | null;
   cadence: string;
@@ -22,41 +21,40 @@ export const PLANS: Plan[] = [
     cadence: "free forever",
     tagline: "Follow the public record",
     features: [
-      "Today's football and basketball picks",
-      "Confidence score and risk grade on every pick",
       "The public results ledger — wins and losses",
-      "The 5.00 SafeBets tip of the day",
+      "Fixture and score updates when a data source is available",
+      "Preview of current pick details when available",
     ],
     cta: "Create free account",
   },
   {
     id: "Pro",
     name: "Pro",
-    price: null,
+    price: 5000,
     cadence: "per month",
-    tagline: "Every pick, fully unlocked",
+    tagline: "Today's picks, with the analysis",
     highlight: true,
     features: [
-      "Everything in Free",
-      "Full written reasoning on every selection",
-      "All three SafeBets tips — 5.00, 10.00 and 50.00",
-      "The full results archive with league filters",
-      "Email alert before each kick-off",
+      "Up to 3 available pending picks per day",
+      "Selection and analysis when provided by the source",
+      "Fixture and score updates when available",
+      "Public results ledger — wins and losses",
+      "One month of access; renew manually",
     ],
     cta: "Choose Pro",
   },
   {
     id: "Elite",
     name: "Elite",
-    price: null,
+    price: 15000,
     cadence: "per month",
-    tagline: "The whole desk",
+    tagline: "The complete available analysis slate",
     features: [
-      "Everything in Pro",
-      "Every league and market we cover",
-      "Early access to the slate, 24 hours ahead",
-      "Weekly model performance report",
-      "Priority analysis requests",
+      "All available pending picks from the configured source",
+      "Selection and analysis when provided by the source",
+      "Fixture and score updates when available",
+      "Public results ledger — wins and losses",
+      "One month of access; renew manually",
     ],
     cta: "Choose Elite",
   },

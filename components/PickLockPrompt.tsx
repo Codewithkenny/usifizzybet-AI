@@ -7,7 +7,7 @@ interface PickLockPromptProps {
 }
 
 export default function PickLockPrompt({
-  label = "Selection, odds and reasoning are for members",
+  label = "Unlock this selection, its analysis and odds with a paid membership.",
 }: PickLockPromptProps) {
   return (
     <div className="mt-4 rounded-xl border border-dashed border-primary/30 bg-primary/[0.04] p-4 text-center">
@@ -16,10 +16,10 @@ export default function PickLockPrompt({
         {label}
       </p>
       <Link
-        href="/register" // Converted from 'to' attribute to Next.js 'href'
+        href="/membership"
         className="mt-3 inline-flex items-center rounded-full bg-primary px-4 py-2 font-display text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
       >
-        Unlock free
+        See membership plans
       </Link>
     </div>
   );

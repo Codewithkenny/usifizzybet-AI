@@ -1,17 +1,14 @@
-import * as React from "react";
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
-interface MainLayoutProps {
-  children: React.ReactNode;
-}
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
-export default function MainLayout({ children }: MainLayoutProps) {
-  return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
-      <main className="flex-1">{children}</main>
-      <SiteFooter />
-    </div>
-  );
+export default function MainLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return children;
 }

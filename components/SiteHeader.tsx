@@ -93,11 +93,6 @@ export default function SiteHeader() {
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard">Dashboard</Link>
                 </DropdownMenuItem>
-                {user.role === "admin" && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin">Admin dashboard</Link>
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logout()}>
                   Log out
@@ -153,15 +148,6 @@ export default function SiteHeader() {
                 className="text-sm text-muted-foreground"
               >
                 Dashboard
-              </Link>
-            )}
-            {user?.role === "admin" && (
-              <Link
-                href="/admin"
-                onClick={() => setOpen(false)}
-                className="text-sm text-muted-foreground"
-              >
-                Admin dashboard
               </Link>
             )}
             <div className="mt-2 flex gap-2">

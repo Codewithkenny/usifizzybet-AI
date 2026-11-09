@@ -1,34 +1,33 @@
-@import url('https://googleapis.com');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 222 22% 5%;
-    --foreground: 44 24% 95%;
-    --card: 222 19% 8%;
-    --card-foreground: 44 24% 95%;
-    --popover: 222 20% 7%;
-    --popover-foreground: 44 24% 95%;
-    --primary: 74 100% 62%;
-    --primary-foreground: 222 45% 6%;
-    --secondary: 222 14% 13%;
-    --secondary-foreground: 44 20% 93%;
-    --muted: 222 14% 12%;
-    --muted-foreground: 220 9% 60%;
-    --accent: 222 16% 15%;
-    --accent-foreground: 44 24% 95%;
+    --background: 240 20% 6%;
+    --foreground: 0 0% 96%;
+    --card: 240 18% 10%;
+    --card-foreground: 0 0% 96%;
+    --popover: 240 20% 8%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 247 100% 68.5%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 248 30% 25%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 240 16% 15%;
+    --muted-foreground: 240 8% 68%;
+    --accent: 164 72% 45%;
+    --accent-foreground: 240 20% 8%;
     --destructive: 357 70% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 222 13% 17%;
-    --input: 222 13% 19%;
-    --ring: 74 100% 62%;
-    --chart-1: 74 100% 62%;
-    --chart-2: 165 72% 45%;
-    --chart-3: 202 84% 58%;
-    --chart-4: 42 92% 62%;
-    --chart-5: 338 72% 62%;
+    --border: 240 13% 23%;
+    --input: 240 13% 25%;
+    --ring: 247 100% 68.5%;
+    --chart-1: 247 100% 68.5%;
+    --chart-2: 164 72% 45%;
+    --chart-3: 205 85% 62%;
+    --chart-4: 274 82% 74%;
+    --chart-5: 190 75% 55%;
     --radius: 0.85rem;
 
     /* Configured to bind straight with Next.js variable hooks below */
@@ -37,36 +36,36 @@
     --font-display: var(--font-space-grotesk);
     --font-mono: var(--font-jetbrains-mono);
 
-    --sidebar-background: 222 19% 7%;
-    --sidebar-foreground: 44 20% 92%;
-    --sidebar-primary: 74 100% 62%;
-    --sidebar-primary-foreground: 222 45% 6%;
-    --sidebar-accent: 222 16% 14%;
-    --sidebar-accent-foreground: 44 20% 92%;
-    --sidebar-border: 222 13% 17%;
-    --sidebar-ring: 74 100% 62%;
+    --sidebar-background: 240 20% 8%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 247 100% 68.5%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 248 30% 25%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 240 13% 23%;
+    --sidebar-ring: 247 100% 68.5%;
   }
 
   .dark {
-    --background: 222 22% 5%;
-    --foreground: 44 24% 95%;
-    --card: 222 19% 8%;
-    --card-foreground: 44 24% 95%;
-    --popover: 222 20% 7%;
-    --popover-foreground: 44 24% 95%;
-    --primary: 74 100% 62%;
-    --primary-foreground: 222 45% 6%;
-    --secondary: 222 14% 13%;
-    --secondary-foreground: 44 20% 93%;
-    --muted: 222 14% 12%;
-    --muted-foreground: 220 9% 60%;
-    --accent: 222 16% 15%;
-    --accent-foreground: 44 24% 95%;
+    --background: 240 20% 6%;
+    --foreground: 0 0% 96%;
+    --card: 240 18% 10%;
+    --card-foreground: 0 0% 96%;
+    --popover: 240 20% 8%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 247 100% 68.5%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 248 30% 25%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 240 16% 15%;
+    --muted-foreground: 240 8% 68%;
+    --accent: 164 72% 45%;
+    --accent-foreground: 240 20% 8%;
     --destructive: 357 70% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 222 13% 17%;
-    --input: 222 13% 19%;
-    --ring: 74 100% 62%;
+    --border: 240 13% 23%;
+    --input: 240 13% 25%;
+    --ring: 247 100% 68.5%;
   }
 }
 
