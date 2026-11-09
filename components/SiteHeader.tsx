@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
@@ -44,6 +44,10 @@ export default function SiteHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname(); // Native Next.js path tracker
 
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   const getLinkClass = (href: string) => {
     const isActive = pathname === href;
     return `text-[13px] transition-colors lg:text-sm ${
@@ -57,7 +61,7 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
         <Brand />
-        <nav className="hidden items-center gap-4 md:flex lg:gap-5">
+        <nav className="hidden items-center gap-4 lg:flex">
           {LINKS.map((link) => (
             <Link
               key={link.href}
@@ -68,7 +72,7 @@ export default function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="hidden items-center gap-2 md:flex lg:gap-3">
+        <div className="hidden items-center gap-2 lg:flex">
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -113,21 +117,27 @@ export default function SiteHeader() {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="grid h-9 w-9 place-items-center rounded-full border border-border text-foreground md:hidden"
+          className="grid h-11 w-11 place-items-center rounded-full border border-border text-foreground lg:hidden"
           aria-label="Toggle menu"
+          aria-expanded={open}
+          aria-controls="mobile-navigation"
         >
           {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </button>
       </div>
       {open && (
-        <div className="border-t border-border px-5 pb-5 pt-3 md:hidden bg-background">
+        <nav
+          id="mobile-navigation"
+          aria-label="Mobile navigation"
+          className="border-t border-border bg-background px-5 pb-5 pt-3 lg:hidden"
+        >
           <div className="flex flex-col gap-3">
             {LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground"
               >
                 {link.label}
               </Link>
@@ -136,7 +146,7 @@ export default function SiteHeader() {
               <Link
                 href="/profile"
                 onClick={() => setOpen(false)}
-                className="text-sm text-muted-foreground"
+                className="flex min-h-11 items-center text-sm text-muted-foreground"
               >
                 Profile
               </Link>
@@ -145,7 +155,7 @@ export default function SiteHeader() {
               <Link
                 href="/dashboard"
                 onClick={() => setOpen(false)}
-                className="text-sm text-muted-foreground"
+                className="flex min-h-11 items-center text-sm text-muted-foreground"
               >
                 Dashboard
               </Link>
@@ -168,16 +178,20 @@ export default function SiteHeader() {
                     asChild
                     className="flex-1"
                   >
-                    <Link href="/login">Log in</Link>
+                    <Link href="/login" onClick={() => setOpen(false)}>
+                      Log in
+                    </Link>
                   </Button>
-                  <Button size="sm" asChild className="flex-1">
-                    <Link href="/register">Unlock picks</Link>
+                  <Button size="sm" asChild className="min-h-11 flex-1">
+                    <Link href="/register" onClick={() => setOpen(false)}>
+                      Unlock picks
+                    </Link>
                   </Button>
                 </>
               )}
             </div>
           </div>
-        </div>
+        </nav>
       )}
     </header>
   );
