@@ -30,7 +30,12 @@ export interface MyBetCodeFeedState {
   fixtures: LiveFixture[];
   loading: boolean;
   error: string;
+  fixturesError: string;
+  picksError: string;
 }
+
+const PICKS_REFRESH_INTERVAL_MS = 15 * 60 * 1000;
+const FIXTURES_REFRESH_INTERVAL_MS = 60 * 1000;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -42,59 +47,111 @@ export function useMyBetCodeFeed(): MyBetCodeFeedState {
     fixtures: [],
     loading: true,
     error: "",
+    fixturesError: "",
+    picksError: "",
   });
 
   useEffect(() => {
     let active = true;
-    let timer: ReturnType<typeof setTimeout>;
+    let picksTimer: ReturnType<typeof setTimeout>;
+    let fixturesTimer: ReturnType<typeof setTimeout>;
+    let picksLoaded = false;
+    let fixturesLoaded = false;
 
-    const load = async () => {
+    const loadPicks = async () => {
+      let picks: MyBetCodePick[] | null = null;
+      let errorMessage = "";
       try {
         const response = await fetch("/api/feed", { cache: "no-store" });
-        const result: unknown = await response.json();
+        const responseBody: unknown = await response.json();
         if (!response.ok) {
           const message =
-            isRecord(result) && typeof result.error === "string"
-              ? result.error
+            isRecord(responseBody) && typeof responseBody.error === "string"
+              ? responseBody.error
               : "Live picks and scores are temporarily unavailable";
           throw new Error(message);
         }
         if (
-          !isRecord(result) ||
-          !Array.isArray(result.picks) ||
-          !Array.isArray(result.fixtures)
+          !isRecord(responseBody) ||
+          !Array.isArray(responseBody.picks)
         ) {
-          throw new Error("The live feed returned an invalid response");
+          throw new Error("The picks feed returned an invalid response");
         }
-        if (active) {
-          setState({
-            picks: result.picks as MyBetCodePick[],
-            fixtures: result.fixtures as LiveFixture[],
-            loading: false,
-            error: "",
-          });
-        }
+        picks = responseBody.picks as MyBetCodePick[];
       } catch (error) {
-        if (active) {
-          console.error("Unable to load MyBetCode feed:", error);
-          setState((current) => ({
-            ...current,
-            loading: false,
-            error:
-              error instanceof Error
-                ? error.message
-                : "Live picks and scores are temporarily unavailable",
-          }));
-        }
-      } finally {
-        if (active) timer = setTimeout(() => void load(), 60_000);
+        errorMessage =
+          error instanceof Error
+            ? error.message
+            : "AI picks are temporarily unavailable";
+        console.error("Unable to load MyBetCode picks:", error);
+      }
+
+      picksLoaded = true;
+      if (active) {
+        setState((current) => ({
+          ...current,
+          ...(picks ? { picks } : {}),
+          loading: !(picksLoaded && fixturesLoaded),
+          error: errorMessage,
+          picksError: errorMessage,
+        }));
+        picksTimer = setTimeout(
+          () => void loadPicks(),
+          PICKS_REFRESH_INTERVAL_MS,
+        );
       }
     };
 
-    void load();
+    const loadFixtures = async () => {
+      let fixtures: LiveFixture[] | null = null;
+      let errorMessage = "";
+      try {
+        const response = await fetch("/api/football/fixtures", {
+          cache: "no-store",
+        });
+        const responseBody: unknown = await response.json();
+        if (!response.ok) {
+          const message =
+            isRecord(responseBody) && typeof responseBody.error === "string"
+              ? responseBody.error
+              : "Football fixtures are temporarily unavailable";
+          throw new Error(message);
+        }
+        if (!isRecord(responseBody) || !Array.isArray(responseBody.fixtures)) {
+          throw new Error("The fixtures feed returned an invalid response");
+        }
+        fixtures = responseBody.fixtures as LiveFixture[];
+      } catch (error) {
+        if (active) {
+          console.error("Unable to load API-Football fixtures:", error);
+        }
+        errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Football fixtures are temporarily unavailable";
+      }
+
+      fixturesLoaded = true;
+      if (active) {
+        setState((current) => ({
+          ...current,
+          ...(fixtures ? { fixtures } : {}),
+          loading: !(picksLoaded && fixturesLoaded),
+          fixturesError: errorMessage,
+        }));
+        fixturesTimer = setTimeout(
+          () => void loadFixtures(),
+          FIXTURES_REFRESH_INTERVAL_MS,
+        );
+      }
+    };
+
+    void loadPicks();
+    void loadFixtures();
     return () => {
       active = false;
-      clearTimeout(timer);
+      clearTimeout(picksTimer);
+      clearTimeout(fixturesTimer);
     };
   }, []);
 

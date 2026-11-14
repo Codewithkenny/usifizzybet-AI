@@ -22,20 +22,6 @@ interface FeedPick extends PickRecord {
   fixture_id?: number | null;
 }
 
-interface Fixture {
-  id: number;
-  sport: string;
-  league: string;
-  home_team: string;
-  away_team: string;
-  kickoff: string;
-  status: string;
-  home_score: number | null;
-  away_score: number | null;
-  minute_label: string | null;
-  live_updated_at: string | null;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -65,7 +51,7 @@ function normalizedStatus(value: string): string {
   }
 }
 
-function readFeedData(value: unknown, key: "picks" | "fixtures") {
+function readFeedData(value: unknown, key: "picks") {
   if (
     !isRecord(value) ||
     value.message !== "success" ||
@@ -78,7 +64,7 @@ function readFeedData(value: unknown, key: "picks" | "fixtures") {
 }
 
 async function fetchProviderData(
-  endpoint: "picks" | "fixtures",
+  endpoint: "picks",
   apiKey: string,
 ) {
   const url = new URL(
@@ -89,11 +75,14 @@ async function fetchProviderData(
 
   const response = await fetch(url, {
     headers: { "X-API-Key": apiKey },
-    next: { revalidate: 45 },
+    next: { revalidate: 8 * 60 * 60 },
     signal: AbortSignal.timeout(12_000),
   });
   if (!response.ok) {
     console.error(`MyBetCode ${endpoint} request returned HTTP`, response.status);
+    if (response.status === 429) {
+      throw new Error("MyBetCode request limit reached");
+    }
     throw new Error("MyBetCode feed request failed");
   }
   const body = await readBoundedText(response, 2_000_000);
@@ -167,33 +156,6 @@ function normalizePick(
   };
 }
 
-function normalizeFixture(value: unknown): Fixture | null {
-  if (
-    !isRecord(value) ||
-    typeof value.id !== "number" ||
-    typeof value.home_team !== "string" ||
-    typeof value.away_team !== "string" ||
-    typeof value.starts_at !== "string" ||
-    typeof value.status !== "string"
-  ) {
-    return null;
-  }
-
-  return {
-    id: value.id,
-    sport: stringValue(value.sport) ?? "Football",
-    league: stringValue(value.league_name) ?? stringValue(value.sport) ?? "Football",
-    home_team: value.home_team,
-    away_team: value.away_team,
-    kickoff: value.starts_at,
-    status: value.status,
-    home_score: numberValue(value.home_score),
-    away_score: numberValue(value.away_score),
-    minute_label: stringValue(value.minute_label),
-    live_updated_at: stringValue(value.live_updated_at),
-  };
-}
-
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -209,14 +171,6 @@ export async function GET(request: NextRequest) {
   );
   if (rateLimit) return rateLimit;
 
-  const apiKey = process.env.MYBETCODE_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "MyBetCode feed is not configured" },
-      { status: 503, headers: { "Cache-Control": "private, no-store" } },
-    );
-  }
-
   let membership: Membership | null = null;
   try {
     membership = user ? await getMembership(user.id) : null;
@@ -228,35 +182,53 @@ export async function GET(request: NextRequest) {
   }
   const canAccess = hasActiveMembership(membership);
 
-  try {
-    const [picksResponse, fixturesResponse] = await Promise.all([
-      fetchProviderData("picks", apiKey),
-      fetchProviderData("fixtures", apiKey),
-    ]);
-    const allPicks = readFeedData(picksResponse, "picks")
-      .map((pick) => normalizePick(pick, canAccess))
-      .filter((pick): pick is FeedPick => pick !== null);
-    let pendingCount = 0;
-    const picks =
-      canAccess && membership?.plan_id === "Pro"
-        ? allPicks.filter(
-            (pick) =>
-              pick.status !== "Pending" || pendingCount++ < 3,
-          )
-        : allPicks;
-    const fixtures = readFeedData(fixturesResponse, "fixtures")
-      .map(normalizeFixture)
-      .filter((fixture): fixture is Fixture => fixture !== null);
+  const myBetCodeApiKey = process.env.MYBETCODE_API_KEY;
+  let picks: FeedPick[] = [];
+  let picksError: string | null = null;
+  let picksAvailable = false;
 
+  if (myBetCodeApiKey) {
+    try {
+      const picksResponse = await fetchProviderData("picks", myBetCodeApiKey);
+      const allPicks = readFeedData(picksResponse, "picks")
+        .map((pick) => normalizePick(pick, canAccess))
+        .filter((pick): pick is FeedPick => pick !== null);
+      let pendingCount = 0;
+      picks =
+        canAccess && membership?.plan_id === "Pro"
+          ? allPicks.filter(
+              (pick) => pick.status !== "Pending" || pendingCount++ < 3,
+            )
+          : allPicks;
+      picksAvailable = true;
+    } catch (error) {
+      console.error("MyBetCode picks feed unavailable:", error);
+      picksError =
+        error instanceof Error &&
+        error.message === "MyBetCode request limit reached"
+          ? "MyBetCode has temporarily limited requests. Try again later or check your plan quota."
+          : "AI picks from the configured provider are temporarily unavailable.";
+    }
+  } else {
+    picksError = "AI picks are not configured.";
+  }
+
+  if (!picksAvailable) {
     return NextResponse.json(
-      { picks, fixtures, fetchedAt: new Date().toISOString() },
-      { headers: { "Cache-Control": "private, no-store" } },
-    );
-  } catch (error) {
-    console.error("MyBetCode feed unavailable:", error);
-    return NextResponse.json(
-      { error: "Live picks and scores are temporarily unavailable" },
+      {
+        error: "AI picks from the configured provider are temporarily unavailable.",
+        picksError,
+      },
       { status: 502, headers: { "Cache-Control": "private, no-store" } },
     );
   }
+
+  return NextResponse.json(
+    {
+      picks,
+      picksError,
+      fetchedAt: new Date().toISOString(),
+    },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }

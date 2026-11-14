@@ -30,7 +30,7 @@
 //   return (
 //     <section className="border-b border-border bg-secondary/30">
 //       <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
-//         <p className="eyebrow">usiffizybet</p>
+//         <p className="eyebrow">BetCode9ja</p>
 //         <h2 className="mt-3 max-w-xl font-display text-3xl font-bold tracking-[-0.02em] text-foreground md:text-4xl">
 //           Football. Basketball. Nothing else.
 //         </h2>

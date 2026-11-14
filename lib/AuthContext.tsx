@@ -84,11 +84,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsAuthenticated(true);
       setAuthError(null);
     } catch (error) {
-      console.error("User auth check failed:", error);
+      const status = getErrorStatus(error);
+      if (status !== 401 && status !== 403) {
+        console.error("User auth check failed:", error);
+      }
       setUser(null);
       setIsAuthenticated(false);
       setAuthError(
-        getErrorStatus(error) === 401 || getErrorStatus(error) === 403
+        status === 401 || status === 403
           ? {
               type: "auth_required",
               message: "Authentication required",

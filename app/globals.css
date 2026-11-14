@@ -10,8 +10,14 @@
     --card-foreground: 0 0% 96%;
     --popover: 240 20% 8%;
     --popover-foreground: 0 0% 96%;
-    --primary: 247 100% 68.5%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 248 100% 77%;
+    --primary-foreground: 240 20% 6%;
+    --primary-gradient: linear-gradient(
+      110deg,
+      #b1a5ff 0%,
+      #998aff 52%,
+      #806bf2 100%
+    );
     --secondary: 248 30% 25%;
     --secondary-foreground: 0 0% 96%;
     --muted: 240 16% 15%;
@@ -22,8 +28,8 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 13% 23%;
     --input: 240 13% 25%;
-    --ring: 247 100% 68.5%;
-    --chart-1: 247 100% 68.5%;
+    --ring: 248 100% 77%;
+    --chart-1: 248 100% 77%;
     --chart-2: 164 72% 45%;
     --chart-3: 205 85% 62%;
     --chart-4: 274 82% 74%;
@@ -38,12 +44,12 @@
 
     --sidebar-background: 240 20% 8%;
     --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 247 100% 68.5%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 248 100% 77%;
+    --sidebar-primary-foreground: 240 20% 6%;
     --sidebar-accent: 248 30% 25%;
     --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 240 13% 23%;
-    --sidebar-ring: 247 100% 68.5%;
+    --sidebar-ring: 248 100% 77%;
   }
 
   .dark {
@@ -53,8 +59,14 @@
     --card-foreground: 0 0% 96%;
     --popover: 240 20% 8%;
     --popover-foreground: 0 0% 96%;
-    --primary: 247 100% 68.5%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 248 100% 77%;
+    --primary-foreground: 240 20% 6%;
+    --primary-gradient: linear-gradient(
+      110deg,
+      #b1a5ff 0%,
+      #998aff 52%,
+      #806bf2 100%
+    );
     --secondary: 248 30% 25%;
     --secondary-foreground: 0 0% 96%;
     --muted: 240 16% 15%;
@@ -65,7 +77,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 13% 23%;
     --input: 240 13% 25%;
-    --ring: 247 100% 68.5%;
+    --ring: 248 100% 77%;
   }
 }
 
@@ -90,6 +102,19 @@
 @layer components {
   .eyebrow {
     @apply font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground;
+  }
+
+  @layer utilities {
+    .bg-primary {
+      background-image: var(--primary-gradient);
+      background-position: 0% 50%;
+      background-size: 180% 100%;
+      transition: background-position 300ms ease;
+    }
+
+    .bg-primary:hover {
+      background-position: 100% 50%;
+    }
   }
 
   .rule {

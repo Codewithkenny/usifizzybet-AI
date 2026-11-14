@@ -59,15 +59,14 @@ export default function EntryHomePage() {
 
   return (
     <div>
-      <PromoBanner />
       <Hero
         featured={feed.picks[0]}
         locked={locked || Boolean(feed.picks[0]?.provider_locked)}
         pendingCount={pendingCount}
         feedLoading={feed.loading}
-        feedError={feed.error}
       />
       <StatsRow won={stats.won} lost={stats.lost} pending={pendingCount} />
+      <PromoBanner />
       {loadError && (
         <p
           role="alert"

@@ -12,7 +12,7 @@ export function pageMetadata({
   description,
   path,
 }: PageMetadataInput): Metadata {
-  const fullTitle = `${title} | Usiffizybet`;
+  const fullTitle = `${title} | BetCode9ja`;
 
   return {
     title,
@@ -21,7 +21,7 @@ export function pageMetadata({
     openGraph: {
       type: "website",
       locale: "en_NG",
-      siteName: "Usiffizybet",
+      siteName: "BetCode9ja",
       url: new URL(path, siteUrl),
       title: fullTitle,
       description,

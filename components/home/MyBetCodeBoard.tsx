@@ -16,12 +16,30 @@ interface MyBetCodeBoardProps {
 
 function FixtureCard({ fixture }: { fixture: LiveFixture }) {
   const live = fixture.status === "live" || fixture.status === "halftime";
+  const statusLabel = live
+    ? fixture.minute_label || "Live"
+    : fixture.status === "finished"
+      ? "FT"
+      : fixture.status === "cancelled"
+        ? "CANCELLED"
+        : null;
+  const kickoff = new Date(fixture.kickoff);
+  const kickoffLabel = Number.isNaN(kickoff.getTime())
+    ? "Scheduled"
+    : new Intl.DateTimeFormat("en-NG", {
+        timeZone: "Africa/Lagos",
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(kickoff);
+
   return (
     <article className="relative overflow-hidden rounded-xl border border-border bg-background/70 p-4">
-      {live && (
+      {statusLabel && (
         <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-accent">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
-          {fixture.minute_label || "Live"}
+          {live && (
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+          )}
+          {statusLabel}
         </span>
       )}
       <p className="truncate pr-16 font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground">
@@ -38,7 +56,11 @@ function FixtureCard({ fixture }: { fixture: LiveFixture }) {
           </span>
         ) : (
           <span className="font-mono text-[10px] text-muted-foreground">
-            {fixture.status === "scheduled" ? "UP NEXT" : fixture.status}
+            {fixture.status === "scheduled"
+              ? kickoffLabel
+              : fixture.status === "halftime"
+                ? "HALF TIME"
+                : fixture.status}
           </span>
         )}
       </div>
@@ -58,10 +80,38 @@ export default function MyBetCodeBoard({
   const liveFixtures = feed.fixtures.filter(
     (fixture) => fixture.status === "live" || fixture.status === "halftime",
   );
-  const fixtures = (liveFixtures.length ? liveFixtures : feed.fixtures).slice(
-    0,
-    compact ? 3 : 6,
-  );
+  const maxFixtures = compact ? 3 : 6;
+  const fixtureGroups = [
+    {
+      label: "Live now",
+      fixtures: liveFixtures.slice(0, maxFixtures),
+    },
+    {
+      label: "Upcoming",
+      fixtures: feed.fixtures
+        .filter((fixture) => fixture.status === "scheduled")
+        .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
+        .slice(0, maxFixtures),
+    },
+    {
+      label: "Final scores",
+      fixtures: feed.fixtures
+        .filter((fixture) => fixture.status === "finished")
+        .sort((a, b) => b.kickoff.localeCompare(a.kickoff))
+        .slice(0, maxFixtures),
+    },
+    {
+      label: "Other updates",
+      fixtures: feed.fixtures
+        .filter(
+          (fixture) =>
+            !["live", "halftime", "scheduled", "finished"].includes(
+              fixture.status,
+            ),
+        )
+        .slice(0, maxFixtures),
+    },
+  ].filter((group) => group.fixtures.length > 0);
 
   return (
     <section className="border-b border-border bg-background">
@@ -105,10 +155,21 @@ export default function MyBetCodeBoard({
             </h3>
             <span className="font-mono text-[10px] text-muted-foreground">
               {liveFixtures.length
-                ? `${liveFixtures.length} in play`
+                ? `${liveFixtures.length} live`
                 : `${feed.fixtures.length} fixtures today`}
             </span>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              · updates every 60 sec
+            </span>
           </div>
+          {feed.fixturesError && (
+            <p
+              role="status"
+              className="mt-4 rounded-xl border border-border bg-card/60 p-4 text-sm text-muted-foreground"
+            >
+              {feed.fixturesError}
+            </p>
+          )}
           {feed.loading ? (
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {[0, 1, 2].map((index) => (
@@ -118,10 +179,19 @@ export default function MyBetCodeBoard({
                 />
               ))}
             </div>
-          ) : fixtures.length ? (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {fixtures.map((fixture) => (
-                <FixtureCard key={fixture.id} fixture={fixture} />
+          ) : fixtureGroups.length ? (
+            <div className="mt-4 space-y-6">
+              {fixtureGroups.map((group) => (
+                <div key={group.label}>
+                  <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                    {group.label}
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {group.fixtures.map((fixture) => (
+                      <FixtureCard key={fixture.id} fixture={fixture} />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
@@ -148,6 +218,14 @@ export default function MyBetCodeBoard({
             </Link>
           )}
         </div>
+        {feed.picksError && (
+          <p
+            role="status"
+            className="mt-4 rounded-xl border border-border bg-card/60 p-4 text-sm text-muted-foreground"
+          >
+            {feed.picksError}
+          </p>
+        )}
         {feed.loading ? (
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[0, 1, 2].map((index) => (
@@ -163,7 +241,7 @@ export default function MyBetCodeBoard({
               <PickCard
                 key={pick.id}
                 pick={pick}
-                locked={pick.provider_locked || !membership.active}
+                locked={pick.provider_locked}
               />
             ))}
           </div>

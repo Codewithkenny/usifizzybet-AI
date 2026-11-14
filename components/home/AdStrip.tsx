@@ -45,7 +45,7 @@ export default function AdStrip() {
       <div className="mx-auto max-w-6xl px-5 py-14 md:py-16">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="eyebrow">The Usiffizybet matchday desk</p>
+            <p className="eyebrow">The BetCode9ja matchday desk</p>
             <h2 className="mt-2 font-display text-2xl font-medium text-foreground">
               A little less noise. A lot more context.
             </h2>

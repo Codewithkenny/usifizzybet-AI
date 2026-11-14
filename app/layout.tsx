@@ -7,7 +7,7 @@ import { siteUrl } from "@/lib/siteUrl";
 import "@/app/globals.css";
 import type { Metadata } from "next";
 
-const siteName = "Usiffizybet";
+const siteName = "BetCode9ja";
 const siteDescription =
   "Football and basketball sports analysis with available picks and a public results ledger. Predictions are uncertain and are not betting advice or guarantees.";
 
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: {
     default: "Football & Basketball Sports Picks and Results",
-    template: "%s | Usiffizybet",
+    template: "%s | BetCode9ja",
   },
   description: siteDescription,
   applicationName: siteName,
@@ -28,12 +28,12 @@ export const metadata: Metadata = {
     locale: "en_NG",
     url: siteUrl,
     siteName,
-    title: "Football & Basketball Sports Picks and Results | Usiffizybet",
+    title: "Football & Basketball Sports Picks and Results | BetCode9ja",
     description: siteDescription,
   },
   twitter: {
     card: "summary",
-    title: "Football & Basketball Sports Picks and Results | Usiffizybet",
+    title: "Football & Basketball Sports Picks and Results | BetCode9ja",
     description: siteDescription,
   },
   robots: {

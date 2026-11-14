@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -26,15 +27,14 @@ const LINKS = [
 export function Brand() {
   return (
     <Link href="/" className="flex items-center gap-2.5">
-      <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-primary font-display text-sm font-bold text-primary-foreground">
-        U
-      </span>
-      <span className="font-display text-[17px] font-semibold tracking-tight text-foreground">
-        usiffizybet
-        <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-primary">
-          AI
-        </span>
-      </span>
+      <Image
+        src="/betcode9ja-logo.png"
+        alt="BetCode9ja"
+        width={176}
+        height={70}
+        className="h-12 w-40 shrink-0 object-contain"
+        priority
+      />
     </Link>
   );
 }

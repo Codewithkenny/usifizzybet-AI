@@ -81,7 +81,7 @@ export default function VideoAd() {
             <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full border border-border/70 bg-background/60 px-3 py-1.5 backdrop-blur z-30">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground">
-                usiffizybet intro
+                BetCode9ja intro
               </span>
             </div>
             <span className="absolute right-5 top-5 hidden font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:block z-30">

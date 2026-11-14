@@ -1,4 +1,4 @@
-# usifizzybet AI
+# BetCode9ja
 
 AI-assisted football and basketball prediction analysis built with Next.js 14,
 Supabase, and the Anthropic Messages API. Picks are probabilistic information,
@@ -34,13 +34,15 @@ ANTHROPIC_API_KEY=
 ANTHROPIC_MODEL=
 CRON_SECRET=
 MYBETCODE_API_KEY=
+API_FOOTBALL_API_KEY=
 PAYSTACK_SECRET_KEY=
 APP_BASE_URL=https://your-production-domain.example
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`,
-`MYBETCODE_API_KEY`, and `PAYSTACK_SECRET_KEY` are server-only secrets. Never
-prefix them with `NEXT_PUBLIC_` or commit their values. `APP_BASE_URL` must be
+`MYBETCODE_API_KEY`, `API_FOOTBALL_API_KEY`, and `PAYSTACK_SECRET_KEY` are
+server-only secrets. Never prefix them with `NEXT_PUBLIC_` or commit their
+values. `APP_BASE_URL` must be
 the canonical site origin used for payment callbacks and same-origin checkout
 requests; SEO canonicals and the sitemap use it as well. Set it to the
 production domain in Vercel. Configure Supabase Auth's allowed redirect URLs
@@ -73,8 +75,13 @@ AI generation endpoint and entity publishing policy both check this flag.
   `/register` redirect to those pages.
 - `/api/llm/invoke` is admin-only and requires `ANTHROPIC_MODEL` and
   `ANTHROPIC_API_KEY`.
-- `/api/feed` proxies MyBetCode picks and fixture/live-score data. It requires a
-  Data Feed-enabled MyBetCode key and caches upstream responses for 45 seconds.
+- `/api/feed` gets picks from MyBetCode, cached for 8 hours to conserve the
+  provider's request quota. `/api/football/fixtures` serves API-Football fixtures,
+  live scores, and results; it accepts `id`, `live=all`, `date`, or `league` and
+  `season` filters. Configure `API_FOOTBALL_API_KEY` server-side. Fixture data is
+  cached for 60 seconds and the client refreshes it at the same interval.
+  Both endpoints use the Supabase-backed rate limiter. API-Football provides
+  football data only.
 - Membership is ₦5,000/month for Pro (up to three daily picks) and ₦15,000/month
   for Elite (all picks available to the configured feed plan). Checkout uses
   Paystack; access is granted only after server-side payment verification.

@@ -86,7 +86,7 @@ export default function EntityListPage({
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
-      <p className="eyebrow">usifizzybet AI</p>
+      <p className="eyebrow">BetCode9ja</p>
       <h1 className="mt-3 font-display text-4xl font-medium text-foreground">
         {title}
       </h1>
@@ -94,9 +94,9 @@ export default function EntityListPage({
         {description}
       </p>
 
-      {feed.error && (entity === "Slip" || status !== "Pending") && (
+      {feed.fixturesError && (entity === "Slip" || status !== "Pending") && (
         <p className="mt-4 text-xs text-muted-foreground">
-          Live score overlays are unavailable right now: {feed.error}
+          Live score overlays are unavailable right now: {feed.fixturesError}
         </p>
       )}
 

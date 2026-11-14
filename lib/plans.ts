@@ -18,7 +18,7 @@ export const PLANS: Plan[] = [
     id: "Free",
     name: "Free",
     price: 0,
-    cadence: "free forever",
+    cadence: "no expiry",
     tagline: "Follow the public record",
     features: [
       "The public results ledger — wins and losses",
@@ -31,7 +31,7 @@ export const PLANS: Plan[] = [
     id: "Pro",
     name: "Pro",
     price: 5000,
-    cadence: "per month",
+    cadence: "one calendar month",
     tagline: "Today's picks, with the analysis",
     highlight: true,
     features: [
@@ -47,7 +47,7 @@ export const PLANS: Plan[] = [
     id: "Elite",
     name: "Elite",
     price: 15000,
-    cadence: "per month",
+    cadence: "one calendar month",
     tagline: "The complete available analysis slate",
     features: [
       "All available pending picks from the configured source",

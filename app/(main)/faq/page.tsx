@@ -11,18 +11,18 @@ import {
 export const metadata = pageMetadata({
   title: "Sports Picks, Membership & Results FAQs",
   description:
-    "Clear answers about Usiffizybet sports predictions, confidence and risk labels, results, membership pricing and payment.",
+    "Clear answers about BetCode9ja sports predictions, confidence and risk labels, results, membership pricing and payment.",
   path: "/faq",
 });
 
 const FAQ_ITEMS = [
   {
-    q: "Is usiffizybet a betting site?",
-    a: "No. usiffizybet is a sports prediction and analysis service. We publish tips, confidence scores and written reasoning. We take no stakes, hold no balances, run no betting accounts and are not affiliated with any operator. Nothing on this site is a prompt to place money on anything.",
+    q: "Is BetCode9ja a betting site?",
+    a: "No. BetCode9ja is a sports prediction and analysis service. We publish tips, confidence scores and written reasoning. We take no stakes, hold no balances, run no betting accounts and are not affiliated with any operator. Nothing on this site is a prompt to place money on anything.",
   },
   {
     q: "How does the AI analysis work?",
-    a: "Usiffizybet does not currently publish a proprietary, independently calibrated prediction model. When picks are available, analysis and labels may come from the configured sports-data source; they can be wrong or incomplete.",
+    a: "BetCode9ja does not currently publish a proprietary, independently calibrated prediction model. When picks are available, analysis and labels may come from the configured sports-data source; they can be wrong or incomplete.",
   },
   {
     q: "Where do the picks come from?",

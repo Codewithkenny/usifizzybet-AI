@@ -1,22 +1,23 @@
+import Image from "next/image";
+
 export default function BrandLoader() {
   return (
     <div
       role="status"
       aria-live="polite"
-      aria-label="Loading Usiffizybet"
+      aria-label="Loading BetCode9ja"
       className="fixed inset-0 z-[100] grid place-items-center bg-background"
     >
       <div className="flex flex-col items-center">
         <div className="flex items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary font-display text-xl font-bold text-primary-foreground shadow-lg shadow-primary/25">
-            U
-          </span>
-          <span className="font-display text-xl font-semibold tracking-tight text-foreground">
-            usiffizybet
-            <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-primary">
-              AI
-            </span>
-          </span>
+          <Image
+            src="/betcode9ja-logo.png"
+            alt="BetCode9ja"
+            width={320}
+            height={128}
+            className="h-28 w-64 object-contain"
+            priority
+          />
         </div>
         <div
           aria-hidden="true"
