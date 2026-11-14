@@ -81,7 +81,17 @@ async function fetchProviderData(
   if (!response.ok) {
     console.error(`MyBetCode ${endpoint} request returned HTTP`, response.status);
     if (response.status === 429) {
-      throw new Error("MyBetCode request limit reached");
+      throw new Error(
+        "MyBetCode daily or monthly request limit reached. Check API usage or upgrade your plan.",
+      );
+    }
+    if (response.status === 403) {
+      throw new Error(
+        "MyBetCode denied access. Check that your plan includes the Data Feed and that your API key is active.",
+      );
+    }
+    if (response.status === 401) {
+      throw new Error("MyBetCode rejected the API key. Check your server configuration.");
     }
     throw new Error("MyBetCode feed request failed");
   }
@@ -205,8 +215,10 @@ export async function GET(request: NextRequest) {
       console.error("MyBetCode picks feed unavailable:", error);
       picksError =
         error instanceof Error &&
-        error.message === "MyBetCode request limit reached"
-          ? "MyBetCode has temporarily limited requests. Try again later or check your plan quota."
+        (error.message.startsWith("MyBetCode daily") ||
+          error.message.startsWith("MyBetCode denied") ||
+          error.message.startsWith("MyBetCode rejected"))
+          ? error.message
           : "AI picks from the configured provider are temporarily unavailable.";
     }
   } else {
@@ -216,7 +228,9 @@ export async function GET(request: NextRequest) {
   if (!picksAvailable) {
     return NextResponse.json(
       {
-        error: "AI picks from the configured provider are temporarily unavailable.",
+        error:
+          picksError ??
+          "AI picks from the configured provider are temporarily unavailable.",
         picksError,
       },
       { status: 502, headers: { "Cache-Control": "private, no-store" } },

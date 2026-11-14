@@ -76,7 +76,8 @@ AI generation endpoint and entity publishing policy both check this flag.
 - `/api/llm/invoke` is admin-only and requires `ANTHROPIC_MODEL` and
   `ANTHROPIC_API_KEY`.
 - `/api/feed` gets picks from MyBetCode, cached for 8 hours to conserve the
-  provider's request quota. `/api/football/fixtures` serves API-Football fixtures,
+  provider's request quota; the client refreshes picks at that interval.
+  `/api/football/fixtures` serves API-Football fixtures,
   live scores, and results; it accepts `id`, `live=all`, `date`, or `league` and
   `season` filters. Configure `API_FOOTBALL_API_KEY` server-side. Fixture data is
   cached for 60 seconds and the client refreshes it at the same interval.

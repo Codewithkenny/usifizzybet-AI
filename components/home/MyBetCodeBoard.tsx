@@ -138,15 +138,6 @@ export default function MyBetCodeBoard({
           )}
         </div>
 
-        {feed.error && (
-          <p
-            role="alert"
-            className="mt-8 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
-          >
-            {feed.error}
-          </p>
-        )}
-
         <div className="mt-9">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-accent" aria-hidden="true" />
@@ -245,7 +236,7 @@ export default function MyBetCodeBoard({
               />
             ))}
           </div>
-        ) : !feed.error ? (
+        ) : !feed.picksError ? (
           <p className="mt-4 rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             No picks are on today&apos;s board yet.
           </p>

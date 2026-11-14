@@ -34,7 +34,7 @@ export interface MyBetCodeFeedState {
   picksError: string;
 }
 
-const PICKS_REFRESH_INTERVAL_MS = 15 * 60 * 1000;
+const PICKS_REFRESH_INTERVAL_MS = 8 * 60 * 60 * 1000;
 const FIXTURES_REFRESH_INTERVAL_MS = 60 * 1000;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -92,7 +92,7 @@ export function useMyBetCodeFeed(): MyBetCodeFeedState {
           ...current,
           ...(picks ? { picks } : {}),
           loading: !(picksLoaded && fixturesLoaded),
-          error: errorMessage,
+          error: "",
           picksError: errorMessage,
         }));
         picksTimer = setTimeout(
